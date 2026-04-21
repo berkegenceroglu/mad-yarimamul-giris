@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MAD Yarımamül Takip Sistemi</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+
+    /* 🟦 TOP BAR */
+    .topbar {
+      background: #1e293b;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .title {
+      font-weight: bold;
+      color: #38bdf8;
+      font-size: 16px;
+    }
+
+    .clock {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .box {
+      max-width: 420px;
+      margin: 40px auto;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      text-align: center;
+      color: #38bdf8;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 15px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #38bdf8;
+      border: none;
+      border-radius: 8px;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #0ea5e9;
+      transform: scale(1.02);
+    }
+
+    .row {
+      background: #334155;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* 🎉 TOAST */
+    #toast {
+      visibility: hidden;
+      min-width: 200px;
+      background-color: #22c55e;
+      color: white;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      z-index: 999;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.3s, fadeout 0.3s 1.7s;
+    }
+
+    @keyframes fadein {
+      from { bottom: 0; opacity: 0; }
+      to { bottom: 30px; opacity: 1; }
+    }
+
+    @keyframes fadeout {
+      from { opacity: 1; }
+      to { opacity: 0; bottom: 0; }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- 🟦 TOP BAR -->
+<div class="topbar">
+  <div class="title">MAD Yarımamül Takip Sistemi</div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<!-- 🔐 LOGIN -->
+<div id="loginBox" class="box">
+  <h2>Giriş Paneli</h2>
+  <div class="subtitle">Üretim Takip Sistemi</div>
+
+  <input type="password" id="password" placeholder="Şifre">
+  <button onclick="login()">Giriş Yap</button>
+
+  <p id="error" style="color:red; text-align:center;"></p>
+</div>
+
+<!-- 📋 FORM -->
+<div id="app" class="box hidden">
+
+  <h2>Yarımamül Girişi</h2>
+  <div class="subtitle">Üretim kayıt ekranı</div>
+
+  <select id="operator">
+    <option>Gündüz Vardiyası</option>
+    <option>Gece Vardiyası</option>
+    <option>Berke</option>
+  </select>
+
+  <select id="time">
+    <option>08:30 – 10:30</option>
+    <option>10:45 – 12:30</option>
+    <option>13:00 – 15:30</option>
+    <option>15:45 – 17:30</option>
+    <option>17:30 – 02:30</option>
+  </select>
+
+  <h3 style="color:#38bdf8;">Ürünler</h3>
+
+  <div id="rows">
+    <div class="row">
+      <input type="text" class="urun" placeholder="Ürün">
+      <input type="number" class="litre" placeholder="Litre">
+      <input type="text" class="kazan" placeholder="Kazan">
+    </div>
+  </div>
+
+  <button onclick="addRow()">+ Satır Ekle</button>
+  <button onclick="sendData()">Kaydet</button>
+
+</div>
+
+<!-- 🎉 TOAST -->
+<div id="toast">✔ Kayıt Başarılı</div>
+
+<script>
+
+// 🕒 CANLI SAAT
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clock").innerText =
+    now.toLocaleTimeString("tr-TR");
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// 🔐 LOGIN
+function login() {
+  const pass = document.getElementById("password").value;
+
+  if (pass === "1234") {
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+  } else {
+    document.getElementById("error").innerText = "Hatalı şifre!";
+  }
+}
+
+// ➕ SATIR EKLE
+function addRow() {
+  let div = document.createElement("div");
+  div.className = "row";
+
+  div.innerHTML = `
+    <input type="text" class="urun" placeholder="Ürün">
+    <input type="number" class="litre" placeholder="Litre">
+    <input type="text" class="kazan" placeholder="Kazan">
+  `;
+
+  document.getElementById("rows").appendChild(div);
+}
+
+// 📤 GÖNDER
+function sendData() {
+
+  let urunler = document.getElementsByClassName("urun");
+  let litreler = document.getElementsByClassName("litre");
+  let kazanlar = document.getElementsByClassName("kazan");
+
+  let data = [];
+
+  for (let i = 0; i < urunler.length; i++) {
+
+    let urun = urunler[i].value;
+    let litre = litreler[i].value;
+    let kazan = kazanlar[i].value;
+
+    if (urun === "" || litre === "") {
+      alert("Ürün ve litre boş olamaz!");
+      return;
+    }
+
+    data.push({
+      urun: urun,
+      litre: litre,
+      kazan: kazan
+    });
+  }
+
+  fetch("https://https://script.google.com/macros/s/AKfycbzZiJS7OGB6agpcVeG4wAsdZcUe9fC8EHV2ZulwQ02_uDsd6pjprtmzBroq2aVu1IWerw/exec", {
+    method: "POST",
+    body: JSON.stringify({
+      operator: document.getElementById("operator").value,
+      time: document.getElementById("time").value,
+      data: data
+    })
+  });
+
+  showToast();
+  clearForm();
+}
+
+// 🧹 TEMİZLE
+function clearForm() {
+  let urunler = document.getElementsByClassName("urun");
+  let litreler = document.getElementsByClassName("litre");
+  let kazanlar = document.getElementsByClassName("kazan");
+
+  for (let i = 0; i < urunler.length; i++) {
+    urunler[i].value = "";
+    litreler[i].value = "";
+    kazanlar[i].value = "";
+  }
+}
+
+// 🎉 TOAST
+function showToast() {
+  const toast = document.getElementById("toast");
+  toast.className = "show";
+
+  setTimeout(() => {
+    toast.className = toast.className.replace("show", "");
+  }, 2000);
+}
+
+</script>
+
+</body>
+</html>
